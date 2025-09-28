@@ -1,0 +1,113 @@
+//Partie1
+//ex 1
+var x = 1;   // portée fonctionnelle ou globale
+let y = 2;   // portée de bloc {}
+const z = 3; // portée de bloc {}, non réaffectable
+
+{
+    var x = 10;  // modifie la même variable globale
+    let y = 20;  // nouvelle variable locale au bloc
+    const z = 30; // nouvelle constante locale au bloc
+
+    //dans bloc
+    console.log("Dans le bloc :", x, y, z);
+}
+//hors bloc
+console.log("Hors du bloc :", x, y, z);
+
+//question piège
+//z = 100; // on aura l'affichage: TypeError: Assignment to constant variable.
+
+
+//ex2
+// fonction classique
+function somme(a, b) {
+    return a + b;
+}
+
+// version fléchée
+const somme1 = (a, b) => {
+    return a + b;
+};
+
+// return implicite (sans { })
+const somme2 = (a, b) => a + b;
+
+console.log(somme(2, 3));   // 5
+console.log(somme1(2, 3));  // 5
+console.log(somme2(2, 3));  // 5
+
+
+//ex3
+const user = { name: "Noor", age: 10, city: "Tunis" };
+
+// Extraction
+const name = user.name;
+const age = user.age;
+console.log(name); // Noor
+console.log(age);  // 10
+
+
+//ex4
+// Fusion de tableaux
+var arr1 = [1, 2, 3];
+var arr2 = [4, 5, 6];
+var fusion = [...arr1, ...arr2];
+
+console.log(fusion); // [1,2,3,4,5,6]
+
+// Copie d’un objet puis modification
+var person = { name: "Ali", age: 20 };
+var newPerson = { ...person, age: 21 }; // on change seulement l'âge
+
+console.log(person);    // { name: "Ali", age: 20 }
+console.log(newPerson); // { name: "Ali", age: 21 } -> copie superfcielle, pas par reference, alors person ne change pas
+
+
+//Partie 2
+//ex5
+// Création de l'objet livre
+const livre = {
+  titre: "Le Petit Prince",
+  auteur: "Antoine de Saint-Exupéry",
+  annee: 1943,
+  getInfo: function() {
+    return `Le livre "${this.titre}" a été écrit par ${this.auteur} en ${this.annee}.`;
+  }
+};
+console.log(livre.getInfo());
+
+//ex6
+class Etudiant {
+  constructor(nom, note) {
+    this.nom = nom;
+    this.note = note;
+  }
+
+  getMention() {
+    if (this.note >= 16) return "Très bien";
+    else if (this.note >= 14) return "Bien";
+    else if (this.note >= 10) return "Passable";
+    else return "Échec";
+  }
+}
+
+const etudiant1 = new Etudiant("Ameni", 18);
+const etudiant2 = new Etudiant("Noor", 13);
+const etudiant3 = new Etudiant("Yosr", 9);
+
+console.log(`${etudiant1.nom} : ${etudiant1.getMention()}`);
+console.log(`${etudiant2.nom} : ${etudiant2.getMention()}`);
+console.log(`${etudiant3.nom} : ${etudiant3.getMention()}`);
+
+//ex7
+const notes = [12, 5, 17, 9, 20];
+
+const moyenne = notes.reduce((acc, val) => acc + val, 0) / notes.length;
+console.log("Moyenne :", moyenne);
+
+const notesDecroissant = [...notes].sort((a, b) => b - a);
+console.log("Tri décroissant :", notesDecroissant);
+
+const notesSup10 = notes.filter(note => note >= 10);
+console.log("Notes ≥ 10 :", notesSup10);
