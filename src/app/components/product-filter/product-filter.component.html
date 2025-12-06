@@ -1,0 +1,32 @@
+<h2>Liste des produits</h2>
+
+<div class="controls">
+  <input type="text" placeholder="Rechercher un produit..." [(ngModel)]="searchText">
+  <select [(ngModel)]="selectedCategory">
+    <option value="">Toutes les catégories</option>
+    <option value="Soin">Soin</option>
+    <option value="Hygiène">Hygiène</option>
+    <option value="Compléments">Compléments</option>
+    <option value="Cheveux">Cheveux</option>
+  </select>
+  <button (click)="deleteAll()">Tout supprimer</button>
+</div>
+
+<p>Total: {{ totalProducts }} | Rupture: {{ outOfStock }} | Faible stock: {{ lowStock }}</p>
+
+<ng-container *ngIf="filteredProducts.length > 0; else emptyState">
+  <ul>
+    <li *ngFor="let product of filteredProducts; trackBy: p => p.id">
+      <span>{{ product.name }} - {{ product.price | currency }} - {{ product.category }}</span>
+      <span [ngStyle]="{'color': product.stock === 0 ? 'red' : product.stock < 5 ? 'orange' : 'green'}">
+        Stock: {{ product.stock }}
+      </span>
+    </li>
+  </ul>
+</ng-container>
+
+<ng-template #emptyState>
+  <p>Aucun produit trouvé.</p>
+</ng-template>
+
+
