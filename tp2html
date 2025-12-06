@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TP — Application de gestion de tâches (To‑Do)</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;}
+    body{max-width:900px;margin:30px auto;padding:20px;background:#f7f8fa;color:#111;border-radius:10px;box-shadow:0 6px 24px rgba(20,30,40,0.08)}
+    h1{font-size:1.6rem;margin-bottom:6px}
+    p.small{color:#555;margin-top:0;margin-bottom:18px}
+    .controls{display:flex;gap:8px;margin-bottom:12px}
+    input[type=text]{flex:1;padding:10px;border:1px solid #d6dbe0;border-radius:8px;outline:none}
+    button{padding:10px 12px;border-radius:8px;border:0;background:#0b78e3;color:white;cursor:pointer}
+    button.secondary{background:#6b7280}
+    button.ghost{background:transparent;border:1px solid #d6dbe0;color:#111}
+    .top-row{display:flex;gap:12px;align-items:center;margin-bottom:12px}
+    .stats{margin-left:auto;color:#333}
+    ul#taskList{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+    li.task{display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;background:white;border:1px solid #e6e9ee}
+    li.task .text{flex:1}
+    li.task.completed .text{text-decoration:line-through;color:#6b7280}
+    .task-buttons{display:flex;gap:6px}
+    .small-btn{padding:6px 8px;border-radius:6px;border:0;background:#ef4444;color:white;cursor:pointer}
+    .small-btn.finish{background:#10b981}
+    .no-tasks{color:#666;padding:20px;text-align:center}
+    .search{margin-bottom:12px}
+    @media (max-width:520px){body{margin:10px} .controls{flex-direction:column} .top-row{flex-direction:column;align-items:stretch}}
+  </style>
+</head>
+<body>
+  <h1>TP — Application de gestion de tâches</h1>
+  <p class="small">FST-Dep Info . Exemple complet : ajoutez/terminez/supprimez des tâches, persistance via <code>localStorage</code>.</p>
+
+  <div class="controls">
+    <input id="taskInput" type="text" placeholder="Écrire une nouvelle tâche..." />
+    <button id="addBtn">Ajouter</button>
+    <button id="clearAllBtn" class="secondary">Tout supprimer</button>
+  </div>
+
+  <div class="top-row">
+    <div class="search">
+      <input id="searchInput" type="text" placeholder="Rechercher une tâche (filtre)" />
+    </div>
+    <div class="stats" id="counters">Total: 0 • Terminées: 0 • En cours: 0</div>
+  </div>
+
+  <ul id="taskList" aria-live="polite"></ul>
+  <p id="emptyMsg" class="no-tasks">Aucune tâche pour le moment — ajoutez-en une !</p>
+
+  <script>
+    // --- Étape 2 : premières variables et message de bienvenue ---
+    console.log("Bienvenue dans le TP — Application To‑Do (JS).");
+
+    // Variables principales
+    const taskInput = document.getElementById('taskInput');
+    const addBtn = document.getElementById('addBtn');
+    const taskListEl = document.getElementById('taskList');
+    const countersEl = document.getElementById('counters');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    const searchInput = document.getElementById('searchInput');
+    const emptyMsg = document.getElementById('emptyMsg');
+
+    // Tableau de tâches (Étape 7 & 8 : objets)
+    // Chaque tâche : { id: number, text: string, completed: boolean }
+    let tasks = [];
+    const STORAGE_KEY = 'tp_tasks_v1';
+
+    // --- Fonctions (Étape 6) ---
+    //etape 9
+    function saveTasks(){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    }
+    
+    function loadTasks(){
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return;
+      try{
+        const parsed = JSON.parse(raw);
+        if(Array.isArray(parsed)) tasks = parsed;
+      }catch(e){console.warn('Erreur parsing localStorage', e)}
+    }
+    //
+    //etape 8
+    function addTask(text){
+      const trimmed = (text || '').trim();
+      if(!trimmed) return; // ignore empty
+      const task = { id: Date.now() + Math.floor(Math.random()*1000), text: trimmed, completed: false };
+      tasks.push(task);
+      saveTasks();
+      renderTasks();
+      taskInput.value = '';
+      taskInput.focus();
+    }
+
+    function deleteTask(id){
+      tasks = tasks.filter(t => t.id !== id);
+      saveTasks();
+      renderTasks();
+    }
+
+    function toggleTaskCompleted(id){
+      const t = tasks.find(x => x.id === id);
+      if(!t) return;
+      t.completed = !t.completed;
+      saveTasks();
+      renderTasks();
+    }
+
+    function clearAllTasks(){
+      if(!confirm('Confirmer : supprimer toutes les tâches ?')) return;
+      tasks = [];
+      saveTasks();
+      renderTasks();
+    }
+
+    // Étape 3&7 : réafficher via une boucle
+    function renderTasks(){
+      // Filtre via champ de recherche
+      const filter = (searchInput.value || '').toLowerCase();
+      taskListEl.innerHTML = '';
+      const filtered = tasks.filter(t => t.text.toLowerCase().includes(filter));
+
+      if(filtered.length === 0){
+        emptyMsg.style.display = 'block';
+      } else {
+        emptyMsg.style.display = 'none';
+      }
+
+      for(const t of filtered){
+        const li = document.createElement('li');
+        li.className = 'task' + (t.completed ? ' completed' : '');
+        li.dataset.id = t.id;
+
+        const textSpan = document.createElement('span');
+        textSpan.className = 'text';
+        textSpan.textContent = t.text;
+
+        // Etape 5: Buttons
+        const btns = document.createElement('div');
+        btns.className = 'task-buttons';
+
+        const finishBtn = document.createElement('button');
+        finishBtn.className = 'small-btn finish';
+        finishBtn.title = t.completed ? 'Marquer non terminé' : 'Marquer terminé';
+        finishBtn.textContent = t.completed ? 'Annuler' : 'Terminer';
+        finishBtn.addEventListener('click', () => toggleTaskCompleted(t.id));
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'small-btn';
+        delBtn.title = 'Supprimer la tâche';
+        delBtn.textContent = 'Supprimer';
+        delBtn.addEventListener('click', () => deleteTask(t.id));
+
+        btns.appendChild(finishBtn);
+        btns.appendChild(delBtn);
+
+        li.appendChild(textSpan);
+        li.appendChild(btns);
+
+        taskListEl.appendChild(li);
+      }
+
+      // Mettre à jour compteurs (Étape 10)
+      const total = tasks.length;
+      const done = tasks.filter(t => t.completed).length;
+      const pending = total - done;
+      countersEl.textContent = `Total: ${total} • Terminées: ${done} • En cours: ${pending}`;
+    }
+
+    // --- Événements (Étape 4) ---
+    addBtn.addEventListener('click', () => addTask(taskInput.value));
+
+    taskInput.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter'){
+        addTask(taskInput.value);
+      }
+    });
+
+    clearAllBtn.addEventListener('click', clearAllTasks);
+
+    searchInput.addEventListener('input', () => renderTasks());
+
+    // Initialisation
+    loadTasks();
+    renderTasks();
+
+    // Expose quelques fonctions utiles pour la console (facultatif)
+    window._tp = { addTask, deleteTask, toggleTaskCompleted, tasks };
+  </script>
+</body>
+</html>
